@@ -1,0 +1,11 @@
+{
+  "name": "@context/extension",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "node build.mjs",
+    "build": "node build.mjs"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

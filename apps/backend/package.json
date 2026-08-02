@@ -1,0 +1,19 @@
+{
+  "name": "@context/backend",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc --build --clean && tsc --build --force",
+    "start": "bun run build && node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test src/*.test.ts"
+  },
+  "dependencies": {
+    "@context/shared": "*"
+  },
+  "devDependencies": {
+    "@types/node": "^24.1.0",
+    "tsx": "^4.19.4"
+  }
+}

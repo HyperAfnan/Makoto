@@ -1,0 +1,4 @@
+{
+  "extends": "plasmo/templates/tsconfig.base",
+  "compilerOptions": { "strict": true, "paths": { "@context/shared": ["../../packages/shared/src"] } }
+}
