@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { generateQueries, searchEvidence, type SearchProvider } from "./search.js";
+import { generateQueries, searchEvidence } from "./search.js";
+import type { SearchProvider } from "./types/search.js";
 
 test("generates bounded context queries", () => {
   assert.deepEqual(generateQueries("React is dying", "context"), [
@@ -20,7 +21,7 @@ test("runs rounds in parallel and removes duplicate URLs", async () => {
     },
   };
   const response = await searchEvidence(provider, ["one", "two", "three"]);
-  assert.equal(response.rounds, 3);
+  assert.equal(response.rounds, 2);
   assert.equal(response.results.length, 1);
 });
 

@@ -7,7 +7,9 @@ const out = join(root, "build", "chrome-mv3-prod");
 await mkdir(out, { recursive: true });
 await copyFile(join(root, "assets", "manifest.json"), join(out, "manifest.json"));
 
-await writeFile(join(out, "background.js"), `
+await writeFile(
+  join(out, "background.js"),
+  `
 const actions = { context: "context", claim: "claim" };
 chrome.runtime.onInstalled.addListener(() => chrome.contextMenus.removeAll(() => {
   chrome.contextMenus.create({ id: "context", title: "Know the Context", contexts: ["selection"] });
@@ -21,10 +23,13 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     await chrome.tabs.sendMessage(tab.id, { type: "analyze", action });
   } catch {}
 });
-`);
+`,
+);
 
 await mkdir(join(out, "contents"), { recursive: true });
-await writeFile(join(out, "contents", "x.js"), `
+await writeFile(
+  join(out, "contents", "x.js"),
+  `
 function extract(selection) {
   const article = document.querySelector("article");
   const link = article?.querySelector('a[href*="/status/"]');
@@ -36,10 +41,16 @@ chrome.runtime.onMessage.addListener((message) => {
   if (message.type !== "analyze" || !message.action) return;
   chrome.runtime.sendMessage({ type: "tweet-context", action: message.action, context: extract(window.getSelection()?.toString().trim() || "") }).catch(() => undefined);
 });
-`);
+`,
+);
 
-await writeFile(join(out, "sidepanel.html"), `<!doctype html><html><head><meta charset="utf-8"><title>Context</title></head><body><main id="app"></main><script src="sidepanel.js"></script></body></html>`);
-await writeFile(join(out, "sidepanel.js"), `
+await writeFile(
+  join(out, "sidepanel.html"),
+  `<!doctype html><html><head><meta charset="utf-8"><title>Context</title></head><body><main id="app"></main><script src="sidepanel.js"></script></body></html>`,
+);
+await writeFile(
+  join(out, "sidepanel.js"),
+  `
 const app = document.querySelector("#app");
 const API = "http://localhost:8787";
 app.innerHTML = '<h1>Context</h1><p id="status" role="status">Idle</p><pre id="result"></pre>';
@@ -66,6 +77,7 @@ chrome.runtime.onMessage.addListener(async (message) => {
   } catch (error) { status.textContent = "Error"; result.textContent = error.name === "AbortError" ? "Request timed out" : error.message || "Request failed"; }
   finally { clearTimeout(timeout); }
 });
-`);
+`,
+);
 
 console.log(`Built ${out}`);

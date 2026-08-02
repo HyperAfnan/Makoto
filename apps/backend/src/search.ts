@@ -1,9 +1,7 @@
 import type { SearchResult } from "@context/shared";
-
-export interface SearchProvider {
-  readonly name: string;
-  search(query: string, signal?: AbortSignal): Promise<SearchResult[]>;
-}
+import { apiEnv } from "./config/env.js";
+import type { Env } from "./types/env.js";
+import type { SearchProvider } from "./types/search.js";
 
 const domain = (url: string) => {
   try {
@@ -13,7 +11,13 @@ const domain = (url: string) => {
   }
 };
 
-function normalize(item: { title?: unknown; snippet?: unknown; description?: unknown; url?: unknown; link?: unknown }): SearchResult | null {
+function normalize(item: {
+  title?: unknown;
+  snippet?: unknown;
+  description?: unknown;
+  url?: unknown;
+  link?: unknown;
+}): SearchResult | null {
   const url = String(item.url ?? item.link ?? "");
   if (!url.startsWith("http")) return null;
   return {
@@ -39,7 +43,9 @@ export class BraveProvider implements SearchProvider {
       `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(query)}&count=10`,
       { headers: { Accept: "application/json", "X-Subscription-Token": this.apiKey }, signal },
     );
-    return (data.web?.results ?? []).map((item) => normalize(item)).filter((item): item is SearchResult => Boolean(item));
+    return (data.web?.results ?? [])
+      .map((item) => normalize(item))
+      .filter((item): item is SearchResult => Boolean(item));
   }
 }
 
@@ -63,7 +69,7 @@ export class TavilyProvider implements SearchProvider {
   }
 }
 
-export function createProvider(env = process.env): SearchProvider | null {
+export function createProvider(env: Env = apiEnv): SearchProvider | null {
   if (env.SEARCH_PROVIDER === "tavily" && env.TAVILY_API_KEY) return new TavilyProvider(env.TAVILY_API_KEY);
   if (env.BRAVE_API_KEY) return new BraveProvider(env.BRAVE_API_KEY);
   if (env.TAVILY_API_KEY) return new TavilyProvider(env.TAVILY_API_KEY);
@@ -71,9 +77,15 @@ export function createProvider(env = process.env): SearchProvider | null {
 }
 
 export function generateQueries(selection: string, action: "context" | "claim") {
-  const topic = selection.replace(/[^\p{L}\p{N}\s]/gu, " ").replace(/\s+/g, " ").trim();
+  const topic = selection
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
   if (!topic) return [];
-  const suffixes = action === "claim" ? ["fact check", "evidence", "official source", "rebuttal"] : ["background", "news", "history", "official source"];
+  const suffixes =
+    action === "claim"
+      ? ["fact check", "evidence", "official source", "rebuttal"]
+      : ["background", "news", "history", "official source"];
   return [topic, ...suffixes.map((suffix) => `${topic} ${suffix}`)];
 }
 
@@ -82,7 +94,15 @@ export async function searchEvidence(provider: SearchProvider | null, queries: s
   const results = new Map<string, SearchResult>();
   const attempted: string[] = [];
   const errors: string[] = [];
-  if (!provider) return { provider: "none", queries: attempted, rounds: 0, results: [], errors: ["No search API key configured"], latencyMs: Date.now() - started };
+  if (!provider)
+    return {
+      provider: "none",
+      queries: attempted,
+      rounds: 0,
+      results: [],
+      errors: ["No search API key configured"],
+      latencyMs: Date.now() - started,
+    };
 
   let rounds = 0;
   for (let offset = 0; offset < queries.length && rounds < maxRounds; offset += 2) {
@@ -96,5 +116,12 @@ export async function searchEvidence(provider: SearchProvider | null, queries: s
     }
     if (results.size >= 5 && new Set([...results.values()].map((result) => result.domain)).size >= 3) break;
   }
-  return { provider: provider.name, queries: attempted, rounds, results: [...results.values()], errors, latencyMs: Date.now() - started };
+  return {
+    provider: provider.name,
+    queries: attempted,
+    rounds,
+    results: [...results.values()],
+    errors,
+    latencyMs: Date.now() - started,
+  };
 }

@@ -3,3 +3,4 @@ dist
 .plasmo
 .turbo
 bun.lock
+*.tsbuildinfo

@@ -233,7 +233,7 @@ Median response time
 
 Search success rate
 
->95%
+> 95%
 
 User satisfaction
 

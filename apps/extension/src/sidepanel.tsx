@@ -46,7 +46,13 @@ export default function SidePanel() {
         }
       } catch (error) {
         setState("Error");
-        setResult(error instanceof DOMException && error.name === "AbortError" ? "Request timed out" : error instanceof Error ? error.message : "Request failed");
+        setResult(
+          error instanceof DOMException && error.name === "AbortError"
+            ? "Request timed out"
+            : error instanceof Error
+              ? error.message
+              : "Request failed",
+        );
       } finally {
         clearTimeout(timeout);
       }

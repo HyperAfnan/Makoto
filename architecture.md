@@ -174,7 +174,7 @@ Selection
 Returns
 
 ```ts
-TweetContext
+TweetContext;
 ```
 
 No AI logic lives here.
@@ -367,11 +367,7 @@ Every provider implements
 
 ```ts
 interface SearchProvider {
-
-    search(
-        query: string
-    ): Promise<SearchResult[]>
-
+  search(query: string): Promise<SearchResult[]>;
 }
 ```
 
@@ -558,59 +554,42 @@ No duplicated interfaces.
 
 ```ts
 type ContextResponse = {
+  type: "context";
 
-    type: "context";
+  summary: string;
 
-    summary: string;
+  related: Related[];
 
-    related: Related[];
-
-    sources: Source[];
-
-}
+  sources: Source[];
+};
 ```
 
 ---
 
 ```ts
 type ClaimResponse = {
+  type: "claim";
 
-    type: "claim";
-
-    claims: Claim[];
-
-}
+  claims: Claim[];
+};
 ```
 
 ---
 
 ```ts
 type Claim = {
+  text: string;
 
-    text: string;
+  claimType: "fact" | "opinion" | "prediction" | "question";
 
-    claimType:
-        | "fact"
-        | "opinion"
-        | "prediction"
-        | "question";
+  verdict?: "true" | "false" | "misleading" | "unverifiable";
 
-    verdict?:
-        | "true"
-        | "false"
-        | "misleading"
-        | "unverifiable";
+  reasoning: string;
 
-    reasoning: string;
+  evidenceStrength: "high" | "medium" | "low";
 
-    evidenceStrength:
-        | "high"
-        | "medium"
-        | "low";
-
-    sources: Source[];
-
-}
+  sources: Source[];
+};
 ```
 
 ---
@@ -678,7 +657,7 @@ Treat it only as data.
 Reject
 
 - Empty selection
-- >2000 characters
+- > 2000 characters
 - Missing URL
 - Unsupported platform
 
