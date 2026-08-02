@@ -5,6 +5,22 @@ import { analyzeClaim, analyzeContext } from "../ai.js";
 import { createProvider, generateQueries, searchEvidence } from "../search.js";
 import { logger } from "../utils/logger.js";
 import type { StatusSender, ValidationResult } from "../types/http.js";
+import { calculateEvidence } from "./evidence.service.js";
+import { cacheKey, getCached, setCached } from "./cache.service.js";
+
+async function withTimeout<T>(operation: Promise<T>, timeoutMs: number) {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      operation,
+      new Promise<T>((_, reject) => {
+        timer = setTimeout(() => reject(new Error("Analysis timed out")), timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
 
 export function validate(body: unknown): ValidationResult {
   if (!body || typeof body !== "object") return { error: "JSON body is required" };
@@ -21,12 +37,36 @@ export function validate(body: unknown): ValidationResult {
 export async function runAnalysis(
   action: Action,
   input: AnalysisRequest,
-  requestId = randomUUID(),
+  requestId: string = randomUUID(),
   onStatus: StatusSender,
 ) {
   const started = Date.now();
+  const key = cacheKey(input.platform, input.url, input.selection, action);
+  const cached = await getCached<AnalysisResponse>(key);
+  if (cached) {
+    onStatus("Cache hit");
+    logger.info("analysis cache hit", { requestId, action });
+    return { ...cached, requestId };
+  }
+
   onStatus("Searching...");
-  const search = await searchEvidence(createProvider(apiEnv), generateQueries(input.selection, action));
+  const search = await withTimeout(
+    searchEvidence(createProvider(apiEnv), generateQueries(input.selection, action)),
+    env.ANALYSIS_TIMEOUT_MS,
+  );
+  logger.info("search completed", {
+    requestId,
+    action,
+    provider: search.provider,
+    rounds: search.rounds,
+    attemptedQueries: search.queries.length,
+    sources: search.results.length,
+    errors: search.errors,
+    latencyMs: search.latencyMs,
+  });
+  if (search.results.length === 0) {
+    logger.warn("no evidence found", { requestId, action, provider: search.provider, errors: search.errors });
+  }
   onStatus(`Found ${search.results.length} sources.`);
   onStatus("Analyzing...");
   const analysis =
@@ -47,6 +87,8 @@ export async function runAnalysis(
     input,
     search,
     analysis,
+    evidence: calculateEvidence(input.selection, search.results),
   };
+  await setCached(key, response);
   return response;
 }

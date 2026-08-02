@@ -1,28 +1,95 @@
 import { useEffect, useState } from "react";
-import type { Action, TweetContext } from "@context/shared";
+import type { Action, AnalysisResponse, TweetContext } from "@context/shared";
 
 const API = process.env.PLASMO_PUBLIC_API_URL ?? "http://localhost:8787";
 
+type Message = { type?: string; action?: Action; context?: TweetContext };
+
+const actionNames: Record<Action, string> = { context: "Context", claim: "Claim" };
+
+function Evidence({ response }: { response: AnalysisResponse }) {
+  const { evidence } = response;
+  return (
+    <section className="evidence" aria-label="Evidence summary">
+      <div className={`strength strength-${evidence.strength}`}>{evidence.strength} evidence</div>
+      <span>{evidence.independentDomains} independent domains</span>
+      <span>{evidence.officialSources} official sources</span>
+      <span>{Math.round(evidence.agreementRatio * 100)}% agreement</span>
+      {evidence.conflicts > 0 && <span>{evidence.conflicts} conflicting sources</span>}
+    </section>
+  );
+}
+
+function Result({ response }: { response: AnalysisResponse }) {
+  const { analysis, search } = response;
+  return (
+    <>
+      <Evidence response={response} />
+      {analysis.verdict && <div className={`verdict verdict-${analysis.verdict}`}>{analysis.verdict}</div>}
+      {analysis.claimType && <p className="muted">Claim type: {analysis.claimType}</p>}
+      <h2>{response.action === "claim" ? "Analysis" : "Summary"}</h2>
+      <p>{analysis.summary}</p>
+      {analysis.reasoning && (
+        <>
+          <h2>Reasoning</h2>
+          <p>{analysis.reasoning}</p>
+        </>
+      )}
+      {analysis.background && (
+        <>
+          <h2>Background</h2>
+          <p>{analysis.background}</p>
+        </>
+      )}
+      {analysis.claims && analysis.claims.length > 0 && (
+        <>
+          <h2>Claims checked</h2>
+          <ul>
+            {analysis.claims.map((claim) => (
+              <li key={claim}>{claim}</li>
+            ))}
+          </ul>
+        </>
+      )}
+      <h2>Sources ({search.results.length})</h2>
+      <div className="sources">
+        {search.results.map((source) => (
+          <a className="source" href={source.url} target="_blank" rel="noreferrer" key={source.url}>
+            <strong>{source.title || source.domain}</strong>
+            <span>{source.domain}</span>
+            <small>{source.snippet}</small>
+          </a>
+        ))}
+      </div>
+    </>
+  );
+}
+
 export default function SidePanel() {
-  const [state, setState] = useState("Idle");
-  const [result, setResult] = useState("");
+  const [status, setStatus] = useState("Idle");
+  const [response, setResponse] = useState<AnalysisResponse | null>(null);
+  const [error, setError] = useState("");
+  const [lastMessage, setLastMessage] = useState<Message | null>(null);
 
   useEffect(() => {
-    const listener = async (message: { type?: string; action?: Action; context?: TweetContext }) => {
+    chrome.runtime.sendMessage({ type: "sidepanel-ready" }).catch(() => undefined);
+    const listener = async (message: Message) => {
       if (message.type !== "tweet-context" || !message.action || !message.context) return;
-      setState("Loading");
-      setResult("");
+      setLastMessage(message);
+      setStatus("Loading");
+      setError("");
+      setResponse(null);
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 10_000);
+      const timeout = setTimeout(() => controller.abort(), 30_000);
       try {
-        const response = await fetch(`${API}/api/${message.action}`, {
+        const result = await fetch(`${API}/api/${message.action}`, {
           method: "POST",
           headers: { "content-type": "application/json", accept: "text/event-stream" },
           body: JSON.stringify({ ...message.context, action: message.action }),
           signal: controller.signal,
         });
-        if (!response.ok || !response.body) throw new Error(`Request failed (${response.status})`);
-        const reader = response.body.getReader();
+        if (!result.ok || !result.body) throw new Error(`Request failed (${result.status})`);
+        const reader = result.body.getReader();
         const decoder = new TextDecoder();
         let buffer = "";
         while (true) {
@@ -34,23 +101,23 @@ export default function SidePanel() {
             const type = event.match(/^event: (.+)$/m)?.[1];
             const data = event.match(/^data: (.+)$/m)?.[1];
             if (!data) continue;
-            const payload = JSON.parse(data) as { message?: string; requestId?: string };
-            if (type === "status") setState(payload.message ?? "Loading");
+            const payload = JSON.parse(data) as AnalysisResponse & { message?: string };
+            if (type === "status") setStatus(payload.message ?? "Loading");
             if (type === "completed") {
-              setState("Success");
-              setResult(JSON.stringify(payload, null, 2));
+              setStatus("Success");
+              setResponse(payload);
             }
             if (type === "error") throw new Error(payload.message ?? "Analysis failed");
           }
           if (chunk.done) break;
         }
-      } catch (error) {
-        setState("Error");
-        setResult(
-          error instanceof DOMException && error.name === "AbortError"
-            ? "Request timed out"
-            : error instanceof Error
-              ? error.message
+      } catch (caught) {
+        setStatus("Error");
+        setError(
+          caught instanceof DOMException && caught.name === "AbortError"
+            ? "Request timed out. Try again."
+            : caught instanceof Error
+              ? caught.message
               : "Request failed",
         );
       } finally {
@@ -61,11 +128,46 @@ export default function SidePanel() {
     return () => chrome.runtime.onMessage.removeListener(listener);
   }, []);
 
+  const retry = () => {
+    if (!lastMessage?.action) return;
+    chrome.tabs.query({ active: true, lastFocusedWindow: true }, ([tab]) => {
+      if (tab.id)
+        chrome.tabs.sendMessage(tab.id, { type: "analyze", action: lastMessage.action }).catch(() => undefined);
+    });
+  };
   return (
-    <main style={{ fontFamily: "system-ui", padding: 16 }}>
-      <h1>Context</h1>
-      <p role="status">{state}</p>
-      <pre style={{ whiteSpace: "pre-wrap" }}>{result}</pre>
+    <main className="panel">
+      <header>
+        <div>
+          <p className="eyebrow">EVIDENCE ENGINE</p>
+          <h1>Context</h1>
+        </div>
+        <span className={`status status-${status.toLowerCase().replace(/\s/g, "-")}`} role="status">
+          {status}
+        </span>
+      </header>
+      {!response && status === "Idle" && (
+        <div className="empty">
+          <div className="icon">✦</div>
+          <h2>Make a claim clear</h2>
+          <p>Select text in an X post, right-click, and choose Know the Context or Analyze Claim.</p>
+        </div>
+      )}
+      {!response && status !== "Idle" && status !== "Error" && (
+        <div className="loading">
+          <div className="spinner" />
+          <p>{status}</p>
+          <small>Searching independent sources and building an evidence-backed answer.</small>
+        </div>
+      )}
+      {error && (
+        <div className="error">
+          <strong>Couldn’t complete the analysis</strong>
+          <p>{error}</p>
+          <button onClick={retry}>Try again</button>
+        </div>
+      )}
+      {response && <Result response={response} />}
     </main>
   );
 }

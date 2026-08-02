@@ -9,7 +9,7 @@ export function analysisController(action: Action) {
     const result = validate({ ...req.body, action });
     if (result.error) return res.status(400).json({ error: result.error });
 
-    const requestId = randomUUID();
+    const requestId = String(res.locals.requestId ?? randomUUID());
     res.status(200).set({ "Content-Type": "text/event-stream", "Cache-Control": "no-cache", Connection: "keep-alive" });
     res.flushHeaders();
     const send = (event: string, data: unknown) => res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);

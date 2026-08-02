@@ -26,11 +26,19 @@ Start the extension in another terminal:
 bun run --cwd apps/extension dev
 ```
 
-Load the generated `.plasmo` build in Chrome, open `https://x.com`, select tweet text, and use either context-menu action.
+Load `apps/extension/build/chrome-mv3-prod` in Chrome, open `https://x.com`, select tweet text, and use either context-menu action. The panel shows the summary, verdict, evidence strength, and clickable sources.
 
 The backend performs search and streams Week 3 analysis events. Set `GEMINI_API_KEY` to enable grounded summaries and claim reasoning; without it, the API returns an explicit deterministic fallback.
 
 Swagger API documentation is available at `http://localhost:8787/api-docs` when `SWAGGER_ENABLED=true`.
+
+Build a Chrome package:
+
+```bash
+bun run --cwd apps/extension package
+```
+
+For Docker deployment and the beta checklist, see [`docs/deployment.md`](docs/deployment.md) and [`docs/beta-checklist.md`](docs/beta-checklist.md).
 
 ## Search
 

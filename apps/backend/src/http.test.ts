@@ -21,6 +21,7 @@ test.after(() => server.close());
 test("health endpoint returns JSON", async () => {
   const response = await fetch(`${base}/health`);
   assert.equal(response.status, 200);
+  assert.match(response.headers.get("x-request-id") ?? "", /^[0-9a-f-]{36}$/);
   assert.deepEqual(await response.json(), { ok: true });
 });
 

@@ -4,8 +4,8 @@
   "version": "0.0.1",
   "description": "Evidence-based context for X posts.",
   "permissions": ["contextMenus", "sidePanel", "activeTab"],
-  "host_permissions": ["https://x.com/*", "http://localhost:8787/*"],
+  "host_permissions": ["https://x.com/*", "https://twitter.com/*", "http://localhost:8787/*"],
   "side_panel": { "default_path": "sidepanel.html" },
   "background": { "service_worker": "background.js", "type": "module" },
-  "content_scripts": [{ "matches": ["https://x.com/*"], "js": ["contents/x.js"] }]
+  "content_scripts": [{ "matches": ["https://x.com/*", "https://twitter.com/*"], "js": ["contents/x.js"] }]
 }

@@ -1,5 +1,5 @@
 import type { AnalysisResult, ClaimType, SearchResult, Verdict } from "@context/shared";
-import { apiEnv } from "./config/env.js";
+import { apiEnv, env as config } from "./config/env.js";
 import type { Env } from "./types/env.js";
 
 const clean = (value: string) =>
@@ -37,7 +37,7 @@ async function gemini(prompt: string, env: Env): Promise<unknown | null> {
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: { responseMimeType: "application/json" },
       }),
-      signal: AbortSignal.timeout(15000),
+      signal: AbortSignal.timeout(config.GEMINI_TIMEOUT_MS),
     },
   );
   if (!response.ok) throw new Error(`Gemini ${response.status} ${response.statusText}`);

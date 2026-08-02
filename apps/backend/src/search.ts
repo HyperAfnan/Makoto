@@ -1,5 +1,6 @@
 import type { SearchResult } from "@context/shared";
 import { apiEnv } from "./config/env.js";
+import { env } from "./config/env.js";
 import type { Env } from "./types/env.js";
 import type { SearchProvider } from "./types/search.js";
 
@@ -29,7 +30,7 @@ function normalize(item: {
 }
 
 async function json<T>(url: string, init: RequestInit): Promise<T> {
-  const response = await fetch(url, { ...init, signal: init.signal ?? AbortSignal.timeout(8000) });
+  const response = await fetch(url, { ...init, signal: init.signal ?? AbortSignal.timeout(env.SEARCH_TIMEOUT_MS) });
   if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
   return response.json() as Promise<T>;
 }

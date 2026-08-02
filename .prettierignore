@@ -2,5 +2,6 @@ node_modules
 dist
 .plasmo
 .turbo
+apps/extension/build
 bun.lock
 *.tsbuildinfo

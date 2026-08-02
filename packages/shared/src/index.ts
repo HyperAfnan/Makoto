@@ -19,6 +19,15 @@ export type AnalysisResponse = {
   input: TweetContext;
   search: SearchResponse;
   analysis: AnalysisResult;
+  evidence: EvidenceSummary;
+};
+
+export type EvidenceSummary = {
+  independentDomains: number;
+  officialSources: number;
+  agreementRatio: number;
+  conflicts: number;
+  strength: "high" | "medium" | "low";
 };
 
 export type ClaimType = "fact" | "opinion" | "prediction" | "question" | "mixed";

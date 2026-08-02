@@ -1,15 +1,20 @@
 import type { Action, TweetContext } from "@context/shared";
 
 function extract(selection: string): TweetContext {
-  const article = document.querySelector("article");
+  const selected = window.getSelection()?.anchorNode;
+  const article =
+    (selected instanceof Element ? selected.closest("article") : null) ?? document.querySelector("article");
   const link = article?.querySelector<HTMLAnchorElement>('a[href*="/status/"]');
   const time = article?.querySelector("time");
-  const author = article?.querySelector('[data-testid="User-Name"]')?.textContent?.trim() ?? "";
+  const author =
+    article?.querySelector('[data-testid="User-Name"]')?.textContent?.trim() ??
+    article?.querySelector<HTMLAnchorElement>('a[href^="/"]:not([href*="/status/"])')?.textContent?.trim() ??
+    "";
   return {
     selection: selection.slice(0, 2000),
     tweet:
       article?.querySelector('[data-testid="tweetText"]')?.textContent?.trim() ??
-      article?.innerText?.trim() ??
+      article?.innerText?.trim().slice(0, 5000) ??
       selection,
     url: link?.href ?? location.href,
     author,
