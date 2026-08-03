@@ -71,7 +71,7 @@ export async function runAnalysis(
 ) {
   const started = Date.now();
   const credentials = requestEnv(input.settings);
-  const key = cacheKey(input.platform, input.url, input.selection, action);
+  const key = cacheKey(input.platform, input.url, input.selection, action, input.settings);
   const cached = await getCached<AnalysisResponse>(key);
   if (cached) {
     onStatus("Cache hit");
