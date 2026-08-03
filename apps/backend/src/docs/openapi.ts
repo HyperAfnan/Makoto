@@ -1,7 +1,7 @@
 export const openapi = {
   openapi: "3.0.3",
   info: {
-    title: "Context API",
+    title: "Makoto API",
     version: "0.0.0",
     description: "Evidence-based context and claim analysis for X posts.",
   },
@@ -58,6 +58,18 @@ export const openapi = {
           author: { type: "string" },
           timestamp: { type: "string" },
           platform: { type: "string", enum: ["x"] },
+          settings: {
+            type: "object",
+            required: ["searchProvider"],
+            properties: {
+              searchProvider: { type: "string", enum: ["brave", "tavily"] },
+              braveApiKey: { type: "string", maxLength: 500, writeOnly: true },
+              tavilyApiKey: { type: "string", maxLength: 500, writeOnly: true },
+              geminiApiKey: { type: "string", maxLength: 500, writeOnly: true },
+              geminiModel: { type: "string", maxLength: 500 },
+              maxSources: { type: "integer", minimum: 1, maximum: 20 },
+            },
+          },
         },
       },
     },

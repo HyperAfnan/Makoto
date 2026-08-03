@@ -23,3 +23,17 @@ test("rejects oversized selections", () => {
 test("rejects unsupported platforms", () => {
   assert.equal(validate({ ...valid, platform: "web" }).error, "platform must be x");
 });
+
+test("accepts request-scoped API settings", () => {
+  assert.equal(
+    validate({ ...valid, settings: { searchProvider: "brave", braveApiKey: "key", maxSources: 5 } }).error,
+    undefined,
+  );
+});
+
+test("rejects invalid request-scoped API settings", () => {
+  assert.equal(
+    validate({ ...valid, settings: { searchProvider: "google" } }).error,
+    "settings.searchProvider must be brave or tavily",
+  );
+});

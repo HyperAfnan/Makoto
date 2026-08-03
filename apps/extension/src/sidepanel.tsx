@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
-import type { Action, AnalysisResponse, TweetContext } from "@context/shared";
+import type { Action, AnalysisResponse, ApiSettings, TweetContext } from "@context/shared";
 
 const API = process.env.PLASMO_PUBLIC_API_URL ?? "http://localhost:8787";
 
 type Message = { type?: string; action?: Action; context?: TweetContext };
 
-const actionNames: Record<Action, string> = { context: "Context", claim: "Claim" };
+const actionNames: Record<Action, string> = { context: "Makoto", claim: "Claim" };
+const getSettings = (): Promise<ApiSettings | undefined> =>
+  new Promise((resolve) => chrome.storage.local.get("apiSettings", ({ apiSettings }) => resolve(apiSettings)));
 
 function Evidence({ response }: { response: AnalysisResponse }) {
   const { evidence } = response;
@@ -85,7 +87,7 @@ export default function SidePanel() {
         const result = await fetch(`${API}/api/${message.action}`, {
           method: "POST",
           headers: { "content-type": "application/json", accept: "text/event-stream" },
-          body: JSON.stringify({ ...message.context, action: message.action }),
+          body: JSON.stringify({ ...message.context, action: message.action, settings: await getSettings() }),
           signal: controller.signal,
         });
         if (!result.ok || !result.body) throw new Error(`Request failed (${result.status})`);
@@ -140,7 +142,7 @@ export default function SidePanel() {
       <header>
         <div>
           <p className="eyebrow">EVIDENCE ENGINE</p>
-          <h1>Context</h1>
+          <h1>Makoto</h1>
         </div>
         <span className={`status status-${status.toLowerCase().replace(/\s/g, "-")}`} role="status">
           {status}
@@ -150,7 +152,7 @@ export default function SidePanel() {
         <div className="empty">
           <div className="icon">✦</div>
           <h2>Make a claim clear</h2>
-          <p>Select text in an X post, right-click, and choose Know the Context or Analyze Claim.</p>
+          <p>Select text in an X post, right-click, and choose Know Makoto or Analyze Claim.</p>
         </div>
       )}
       {!response && status !== "Idle" && status !== "Error" && (

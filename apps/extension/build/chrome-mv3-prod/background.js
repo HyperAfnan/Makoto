@@ -3,7 +3,7 @@ const actions = { context: "context", claim: "claim" };
 let pendingResult = null;
 function deliverPendingResult() { if (pendingResult) chrome.runtime.sendMessage(pendingResult).catch(() => undefined); }
 chrome.runtime.onInstalled.addListener(() => chrome.contextMenus.removeAll(() => {
-  chrome.contextMenus.create({ id: "context", title: "Know the Context", contexts: ["selection"] });
+  chrome.contextMenus.create({ id: "context", title: "Know Makoto", contexts: ["selection"] });
   chrome.contextMenus.create({ id: "claim", title: "Analyze Claim", contexts: ["selection"] });
 }));
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {

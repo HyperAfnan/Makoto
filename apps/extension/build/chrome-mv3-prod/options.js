@@ -1,0 +1,12 @@
+
+const form = document.querySelector("#settings");
+const status = document.querySelector("#status");
+const setStatus = (message) => { status.textContent = message; };
+const setSearchProvider = (provider) => { document.querySelector("#useBrave").checked = provider === "brave"; document.querySelector("#useTavily").checked = provider === "tavily"; };
+chrome.storage.local.get("apiSettings", ({ apiSettings }) => { if (!apiSettings) return setSearchProvider("brave"); for (const field of ["geminiApiKey", "braveApiKey", "tavilyApiKey", "geminiModel", "maxSources"]) if (apiSettings[field] !== undefined) document.querySelector("#" + field).value = apiSettings[field]; setSearchProvider(apiSettings.searchProvider || "brave"); });
+for (const id of ["useBrave", "useTavily"]) document.querySelector("#" + id).addEventListener("change", (event) => { if (event.target.checked) setSearchProvider(id === "useBrave" ? "brave" : "tavily"); else event.target.checked = true; });
+const setVisible = (id, visible) => { const input = document.querySelector("#" + id); input.type = visible ? "text" : "password"; const button = document.querySelector('[data-target="' + id + '"]'); button.querySelector(".eye-open").style.display = visible ? "none" : "block"; button.querySelector(".eye-off").style.display = visible ? "block" : "none"; };
+for (const button of document.querySelectorAll("[data-target]")) button.addEventListener("click", () => setVisible(button.dataset.target, document.querySelector("#" + button.dataset.target).type === "password"));
+document.querySelector("#showKeys").addEventListener("change", (event) => { for (const id of ["geminiApiKey", "braveApiKey", "tavilyApiKey"]) setVisible(id, event.target.checked); });
+form.addEventListener("submit", async (event) => { event.preventDefault(); await chrome.storage.local.set({ apiSettings: { searchProvider: document.querySelector("#useBrave").checked ? "brave" : "tavily", geminiApiKey: document.querySelector("#geminiApiKey").value.trim(), braveApiKey: document.querySelector("#braveApiKey").value.trim(), tavilyApiKey: document.querySelector("#tavilyApiKey").value.trim(), geminiModel: document.querySelector("#geminiModel").value, maxSources: Number(document.querySelector("#maxSources").value) } }); setStatus("Settings saved."); });
+document.querySelector("#clear").addEventListener("click", async () => { for (const id of ["geminiApiKey", "braveApiKey", "tavilyApiKey"]) document.querySelector("#" + id).value = ""; await chrome.storage.local.remove("apiSettings"); setStatus("API keys cleared."); });

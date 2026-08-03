@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "context",
+      "name": "makoto",
       "devDependencies": {
         "@eslint/js": "^9.31.0",
         "eslint": "^9.31.0",

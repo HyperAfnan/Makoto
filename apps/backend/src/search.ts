@@ -1,5 +1,4 @@
 import type { SearchResult } from "@context/shared";
-import { apiEnv } from "./config/env.js";
 import { env } from "./config/env.js";
 import type { Env } from "./types/env.js";
 import type { SearchProvider } from "./types/search.js";
@@ -70,7 +69,9 @@ export class TavilyProvider implements SearchProvider {
   }
 }
 
-export function createProvider(env: Env = apiEnv): SearchProvider | null {
+export function createProvider(env: Env = {}): SearchProvider | null {
+  if (env.SEARCH_PROVIDER === "tavily") return env.TAVILY_API_KEY ? new TavilyProvider(env.TAVILY_API_KEY) : null;
+  if (env.SEARCH_PROVIDER === "brave") return env.BRAVE_API_KEY ? new BraveProvider(env.BRAVE_API_KEY) : null;
   if (env.SEARCH_PROVIDER === "tavily" && env.TAVILY_API_KEY) return new TavilyProvider(env.TAVILY_API_KEY);
   if (env.BRAVE_API_KEY) return new BraveProvider(env.BRAVE_API_KEY);
   if (env.TAVILY_API_KEY) return new TavilyProvider(env.TAVILY_API_KEY);
@@ -90,7 +91,12 @@ export function generateQueries(selection: string, action: "context" | "claim") 
   return [topic, ...suffixes.map((suffix) => `${topic} ${suffix}`)];
 }
 
-export async function searchEvidence(provider: SearchProvider | null, queries: string[], maxRounds = 3) {
+export async function searchEvidence(
+  provider: SearchProvider | null,
+  queries: string[],
+  maxRounds = 3,
+  maxResults = 10,
+) {
   const started = Date.now();
   const results = new Map<string, SearchResult>();
   const attempted: string[] = [];
@@ -121,7 +127,7 @@ export async function searchEvidence(provider: SearchProvider | null, queries: s
     provider: provider.name,
     queries: attempted,
     rounds,
-    results: [...results.values()],
+    results: [...results.values()].slice(0, maxResults),
     errors,
     latencyMs: Date.now() - started,
   };

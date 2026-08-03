@@ -9,7 +9,16 @@ export type TweetContext = {
   platform: "x";
 };
 
-export type AnalysisRequest = TweetContext & { action: Action };
+export type ApiSettings = {
+  searchProvider: "brave" | "tavily";
+  braveApiKey?: string;
+  tavilyApiKey?: string;
+  geminiApiKey?: string;
+  geminiModel?: string;
+  maxSources?: number;
+};
+
+export type AnalysisRequest = TweetContext & { action: Action; settings?: ApiSettings };
 
 export type AnalysisResponse = {
   requestId: string;

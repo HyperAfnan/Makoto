@@ -1,12 +1,20 @@
-import type { Action, AnalysisRequest, AnalysisResponse } from "@context/shared";
+import type { Action, AnalysisRequest, AnalysisResponse, ApiSettings, TweetContext } from "@context/shared";
 import { randomUUID } from "node:crypto";
-import { apiEnv, env } from "../config/env.js";
+import { env } from "../config/env.js";
 import { analyzeClaim, analyzeContext } from "../ai.js";
 import { createProvider, generateQueries, searchEvidence } from "../search.js";
 import { logger } from "../utils/logger.js";
 import type { StatusSender, ValidationResult } from "../types/http.js";
 import { calculateEvidence } from "./evidence.service.js";
 import { cacheKey, getCached, setCached } from "./cache.service.js";
+
+const requestEnv = (settings?: ApiSettings) => ({
+  SEARCH_PROVIDER: settings?.searchProvider,
+  BRAVE_API_KEY: settings?.braveApiKey,
+  TAVILY_API_KEY: settings?.tavilyApiKey,
+  GEMINI_API_KEY: settings?.geminiApiKey,
+  GEMINI_MODEL: settings?.geminiModel,
+});
 
 async function withTimeout<T>(operation: Promise<T>, timeoutMs: number) {
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -31,6 +39,27 @@ export function validate(body: unknown): ValidationResult {
   if (input.platform !== "x") return { error: "platform must be x" };
   if (String(input.selection).length > 2000) return { error: "selection must be 2000 characters or fewer" };
   if (input.action !== "context" && input.action !== "claim") return { error: "action must be context or claim" };
+  if (input.settings !== undefined) {
+    if (!input.settings || typeof input.settings !== "object") return { error: "settings must be an object" };
+    const settings = input.settings as Record<string, unknown>;
+    if (settings.searchProvider !== "brave" && settings.searchProvider !== "tavily") {
+      return { error: "settings.searchProvider must be brave or tavily" };
+    }
+    for (const field of ["braveApiKey", "tavilyApiKey", "geminiApiKey", "geminiModel"]) {
+      if (
+        settings[field] !== undefined &&
+        (typeof settings[field] !== "string" || String(settings[field]).length > 500)
+      ) {
+        return { error: `settings.${field} must be a string of 500 characters or fewer` };
+      }
+    }
+    if (
+      settings.maxSources !== undefined &&
+      (!Number.isInteger(settings.maxSources) || Number(settings.maxSources) < 1 || Number(settings.maxSources) > 20)
+    ) {
+      return { error: "settings.maxSources must be an integer from 1 to 20" };
+    }
+  }
   return { value: input as unknown as AnalysisRequest };
 }
 
@@ -41,6 +70,7 @@ export async function runAnalysis(
   onStatus: StatusSender,
 ) {
   const started = Date.now();
+  const credentials = requestEnv(input.settings);
   const key = cacheKey(input.platform, input.url, input.selection, action);
   const cached = await getCached<AnalysisResponse>(key);
   if (cached) {
@@ -51,7 +81,12 @@ export async function runAnalysis(
 
   onStatus("Searching...");
   const search = await withTimeout(
-    searchEvidence(createProvider(apiEnv), generateQueries(input.selection, action)),
+    searchEvidence(
+      createProvider(credentials),
+      generateQueries(input.selection, action),
+      3,
+      input.settings?.maxSources ?? 5,
+    ),
     env.ANALYSIS_TIMEOUT_MS,
   );
   logger.info("search completed", {
@@ -71,20 +106,21 @@ export async function runAnalysis(
   onStatus("Analyzing...");
   const analysis =
     action === "claim"
-      ? await analyzeClaim(input.selection, search.results, apiEnv)
-      : await analyzeContext(input.selection, search.results, apiEnv);
+      ? await analyzeClaim(input.selection, search.results, credentials)
+      : await analyzeContext(input.selection, search.results, credentials);
   logger.info("analysis completed", {
     requestId,
     action,
     sources: search.results.length,
     latencyMs: Date.now() - started,
   });
+  const { settings: _settings, action: _action, ...tweetContext } = input;
   const response: AnalysisResponse = {
     requestId,
     action,
     status: "completed",
     message: "Analysis completed.",
-    input,
+    input: tweetContext as TweetContext,
     search,
     analysis,
     evidence: calculateEvidence(input.selection, search.results),

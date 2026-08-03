@@ -1,6 +1,6 @@
-# Context
+# Makoto
 
-Evidence-based context and claim analysis for X.
+Evidence-based analysis and claim verification for X.
 
 ## Setup
 
@@ -28,7 +28,7 @@ bun run --cwd apps/extension dev
 
 Load `apps/extension/build/chrome-mv3-prod` in Chrome, open `https://x.com`, select tweet text, and use either context-menu action. The panel shows the summary, verdict, evidence strength, and clickable sources.
 
-The backend performs search and streams Week 3 analysis events. Set `GEMINI_API_KEY` to enable grounded summaries and claim reasoning; without it, the API returns an explicit deterministic fallback.
+The backend performs search and streams Week 3 analysis events. Open the extension Options page to configure provider keys; without them, the API returns explicit deterministic fallbacks.
 
 Swagger API documentation is available at `http://localhost:8787/api-docs` when `SWAGGER_ENABLED=true`.
 
@@ -42,4 +42,4 @@ For Docker deployment and the beta checklist, see [`docs/deployment.md`](docs/de
 
 ## Search
 
-Copy `apps/backend/.env.example`, set `BRAVE_API_KEY` or `TAVILY_API_KEY`, and restart the backend. The API searches up to three rounds, runs two queries in parallel per round, normalizes results, and removes duplicate URLs.
+Configure a search provider and its key in the extension Options page. The API searches up to three rounds, runs two queries in parallel per round, normalizes results, and removes duplicate URLs.

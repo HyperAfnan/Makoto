@@ -1,5 +1,5 @@
 {
-  "name": "context",
+  "name": "makoto",
   "private": true,
   "workspaces": [
     "apps/*",

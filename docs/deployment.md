@@ -2,7 +2,7 @@
 
 ## Local Docker
 
-Copy `apps/backend/.env.example` to `apps/backend/.env`, add search and Gemini keys, then run:
+Copy `apps/backend/.env.example` to `apps/backend/.env`, then run:
 
 ```bash
 docker compose up --build
@@ -19,7 +19,7 @@ Do not commit `.env` or expose API keys in logs.
 
 ## Hosted backend
 
-Provide the same environment variables to the backend container and set `REDIS_URL` to the hosted Redis instance. Put the backend behind HTTPS before beta use.
+Provide operational environment variables to the backend container and set `REDIS_URL` to the hosted Redis instance. Configure provider keys in the extension Options page. Put the backend behind HTTPS before beta use.
 
 Update `apps/extension/assets/manifest.json` to allow the deployed backend origin, then build with `CONTEXT_API_URL` set:
 
