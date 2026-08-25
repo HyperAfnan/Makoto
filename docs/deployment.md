@@ -2,7 +2,7 @@
 
 ## Local Docker
 
-Copy `apps/backend/.env.example` to `apps/backend/.env`, then run:
+Copy `backend/.env.example` to `backend/.env`, then run:
 
 ```bash
 docker compose up --build
@@ -21,10 +21,10 @@ Do not commit `.env` or expose API keys in logs.
 
 Provide operational environment variables to the backend container and set `REDIS_URL` to the hosted Redis instance. Configure provider keys in the extension Options page. Put the backend behind HTTPS before beta use.
 
-Update `apps/extension/assets/manifest.json` to allow the deployed backend origin, then build with `CONTEXT_API_URL` set:
+Update `extension/assets/manifest.json` to allow the deployed backend origin, then build with `CONTEXT_API_URL` set:
 
 ```bash
-CONTEXT_API_URL=https://api.example.com bun run --cwd apps/extension package
+CONTEXT_API_URL=https://api.example.com bun --cwd extension package
 ```
 
-Upload `apps/extension/build/context-chrome.zip` as a private Chrome Web Store item or load the unpacked `chrome-mv3-prod` directory during development.
+Upload `extension/build/context-chrome.zip` as a private Chrome Web Store item or load the unpacked `chrome-mv3-prod` directory during development.

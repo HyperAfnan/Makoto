@@ -1,0 +1,25 @@
+FROM oven/bun:1.3.14 AS build
+
+WORKDIR /app
+COPY package.json bun.lock tsconfig.json ./
+COPY src ./src
+RUN bun install --frozen-lockfile
+RUN bun run build
+
+FROM oven/bun:1.3.14 AS development
+
+WORKDIR /app
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile
+EXPOSE 8787
+CMD ["bun", "run", "dev"]
+
+FROM node:22-alpine
+
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/dist ./dist
+COPY --from=build /app/package.json ./package.json
+EXPOSE 8787
+CMD ["node", "dist/index.js"]

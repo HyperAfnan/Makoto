@@ -6,27 +6,30 @@ Evidence-based analysis and claim verification for X.
 
 Requires Node 22+ and a network connection for the first install.
 
+Run commands independently per project:
+
 ```bash
-bun install
-bun run typecheck
-bun run test
-bun run lint
-bun run format:check
+bun install --cwd backend
+bun run --cwd backend typecheck
+bun run --cwd backend test
+
+bun install --cwd extension
+bun run --cwd extension build
 ```
 
 Start the backend:
 
 ```bash
-bun run --cwd apps/backend dev
+bun --cwd backend dev
 ```
 
 Start the extension in another terminal:
 
 ```bash
-bun run --cwd apps/extension dev
+bun --cwd extension dev
 ```
 
-Load `apps/extension/build/chrome-mv3-prod` in Chrome, open `https://x.com`, select tweet text, and use either context-menu action. The panel shows the summary, verdict, evidence strength, and clickable sources.
+Load `extension/build/chrome-mv3-prod` in Chrome, open `https://x.com`, select tweet text, and use either context-menu action. The panel shows the summary, verdict, evidence strength, and clickable sources.
 
 The backend performs search and streams Week 3 analysis events. Open the extension Options page to configure provider keys; without them, the API returns explicit deterministic fallbacks.
 
@@ -35,7 +38,7 @@ Swagger API documentation is available at `http://localhost:8787/api-docs` when 
 Build a Chrome package:
 
 ```bash
-bun run --cwd apps/extension package
+bun --cwd extension package
 ```
 
 For Docker deployment and the beta checklist, see [`docs/deployment.md`](docs/deployment.md) and [`docs/beta-checklist.md`](docs/beta-checklist.md).
