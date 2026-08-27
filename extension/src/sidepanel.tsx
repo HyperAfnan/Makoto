@@ -53,7 +53,7 @@ function Result({ response }: { response: AnalysisResponse }) {
 					</ul>
 				</>
 			)}
-			<h2>Sources ({search.results.length})</h2>
+			<h2>Citation ({search.results.length})</h2>
 			<div className="sources">
 				{search.results.map((source) => (
 					<a className="source" href={source.url} target="_blank" rel="noreferrer" key={source.url}>
