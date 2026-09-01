@@ -7,6 +7,7 @@ export type TweetContext = {
 	author: string;
 	timestamp: string;
 	platform: "x";
+	images?: string[];
 };
 
 export type ApiSettings = {

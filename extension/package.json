@@ -11,7 +11,9 @@
 		"format": "prettier --write .",
 		"format:check": "prettier --check ."
 	},
-	"dependencies": {},
+	"dependencies": {
+		"@google/genai": "^2.20.0"
+	},
 	"devDependencies": {
 		"@eslint/js": "^9.31.0",
 		"@types/chrome": "^0.0.308",

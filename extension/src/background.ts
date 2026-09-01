@@ -14,8 +14,8 @@ function deliverPendingResult() {
 
 chrome.runtime.onInstalled.addListener(() => {
 	chrome.contextMenus.removeAll(() => {
-		chrome.contextMenus.create({ id: "context", title: "Know Context", contexts: ["selection"] });
-		chrome.contextMenus.create({ id: "claim", title: "Analyze Claim", contexts: ["selection"] });
+		chrome.contextMenus.create({ id: "context", title: "Know Context", contexts: ["selection", "image"] });
+		chrome.contextMenus.create({ id: "claim", title: "Analyze Claim", contexts: ["selection", "image"] });
 	});
 });
 
@@ -25,7 +25,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 	pendingResult = null;
 	try {
 		await chrome.sidePanel.open({ tabId: tab.id });
-		await chrome.tabs.sendMessage(tab.id, { type: "analyze", action });
+		await chrome.tabs.sendMessage(tab.id, { type: "analyze", action, srcUrl: info.srcUrl });
 		setTimeout(deliverPendingResult, 250);
 	} catch (e) {
 		console.error(`Unable to open side panel Error: ${e}`);

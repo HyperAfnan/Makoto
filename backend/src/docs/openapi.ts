@@ -58,6 +58,12 @@ export const openapi = {
 					author: { type: "string" },
 					timestamp: { type: "string" },
 					platform: { type: "string", enum: ["x"] },
+					images: {
+						type: "array",
+						items: { type: "string" },
+						maxItems: 4,
+						description: "Optional array of image URLs or base64 data URIs attached to the post",
+					},
 					settings: {
 						type: "object",
 						required: ["searchProvider"],

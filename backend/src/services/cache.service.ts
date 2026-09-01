@@ -9,6 +9,7 @@ export function cacheKey(
 	selection: string,
 	action: string,
 	settings?: ApiSettings,
+	images?: string[],
 ) {
 	const settingsFingerprint = createHash("sha256")
 		.update(
@@ -19,6 +20,7 @@ export function cacheKey(
 				geminiApiKey: settings?.geminiApiKey ?? "",
 				geminiModel: settings?.geminiModel ?? "gemini-2.0-flash",
 				maxSources: settings?.maxSources ?? 5,
+				images: (images ?? []).slice().sort(),
 			}),
 		)
 		.digest("hex");

@@ -40,3 +40,21 @@ test("rejects invalid request-scoped API settings", () => {
 		"settings.searchProvider must be brave or tavily",
 	);
 });
+
+test("accepts valid optional images array", () => {
+	const res = validate({ ...valid, images: ["https://pbs.twimg.com/media/test.jpg"] });
+	assert.equal(res.error, undefined);
+	assert.deepEqual(res.value?.images, ["https://pbs.twimg.com/media/test.jpg"]);
+});
+
+test("rejects invalid images format or count", () => {
+	assert.equal(validate({ ...valid, images: "not-an-array" }).error, "images must be an array of strings");
+	assert.equal(
+		validate({ ...valid, images: ["1", "2", "3", "4", "5"] }).error,
+		"images must contain 4 or fewer items",
+	);
+	assert.equal(
+		validate({ ...valid, images: [123] }).error,
+		"each image must be a valid string under 50000 characters",
+	);
+});

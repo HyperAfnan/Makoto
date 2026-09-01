@@ -4,14 +4,17 @@ import { ClaimAnalysisPrompt, ContextAnalysisPrompt } from "./utils/prompts.util
 import type { Env } from "./types/env.js";
 import { gemini } from "./config/gemini.js";
 
+export { classify };
+
 export async function analyzeContext(
 	selection: string,
 	results: SearchResult[],
 	env: Env = {},
+	images?: string[],
 ): Promise<AnalysisResult> {
 	const text = clean(selection);
 	const prompt = ContextAnalysisPrompt(text, evidenceText(results));
-	const result = await gemini(prompt, env);
+	const result = await gemini(prompt, env, images);
 	if (result && typeof result === "object") return result as AnalysisResult;
 	return {
 		summary: results.length
@@ -22,7 +25,12 @@ export async function analyzeContext(
 	};
 }
 
-export async function analyzeClaim(selection: string, results: SearchResult[], env: Env = {}): Promise<AnalysisResult> {
+export async function analyzeClaim(
+	selection: string,
+	results: SearchResult[],
+	env: Env = {},
+	images?: string[],
+): Promise<AnalysisResult> {
 	const claimType = classify(selection);
 	const claims = [clean(selection)];
 	if (claimType !== "fact" && claimType !== "mixed") {
@@ -36,7 +44,7 @@ export async function analyzeClaim(selection: string, results: SearchResult[], e
 		};
 	}
 	const prompt = ClaimAnalysisPrompt(clean(selection), evidenceText(results));
-	const result = await gemini(prompt, env);
+	const result = await gemini(prompt, env, images);
 	if (result && typeof result === "object") return result as AnalysisResult;
 	const verdict: Verdict = results.length ? "unverifiable" : "unverifiable";
 	return {

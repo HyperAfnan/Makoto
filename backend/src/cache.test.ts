@@ -22,3 +22,14 @@ test("identical settings produce stable cache keys", () => {
 	assert.equal(cacheKey(...base, settings), cacheKey(...base, { ...settings }));
 	assert.notEqual(cacheKey(...base, settings), cacheKey(...base, { ...settings, maxSources: 10 }));
 });
+
+test("cache keys change when images change and are stable under reordering", () => {
+	const keyWithoutImages = cacheKey(...base);
+	const keyWithImages1 = cacheKey(...base, undefined, ["https://example.com/1.jpg", "https://example.com/2.jpg"]);
+	const keyWithImages2 = cacheKey(...base, undefined, ["https://example.com/2.jpg", "https://example.com/1.jpg"]);
+	const keyWithOtherImage = cacheKey(...base, undefined, ["https://example.com/3.jpg"]);
+
+	assert.notEqual(keyWithoutImages, keyWithImages1);
+	assert.equal(keyWithImages1, keyWithImages2);
+	assert.notEqual(keyWithImages1, keyWithOtherImage);
+});

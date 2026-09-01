@@ -70,3 +70,21 @@ test("analyzeClaim returns fallback verdict for factual claims when no API key i
 	assert.equal(analysis.verdict, "unverifiable");
 	assert.match(analysis.reasoning ?? "", /Gemini API key is required/);
 });
+
+test("analyzeContext and analyzeClaim gracefully accept optional images array", async () => {
+	const results: SearchResult[] = [
+		{
+			title: "Evidence",
+			snippet: "Snippet",
+			url: "https://example.com",
+			domain: "example.com",
+		},
+	];
+	const images = ["https://pbs.twimg.com/media/test.jpg"];
+	const contextRes = await analyzeContext("Test with image", results, {}, images);
+	assert.match(contextRes.summary, /Search found 1 relevant sources/);
+
+	const claimRes = await analyzeClaim("Earth orbits the Sun", results, {}, images);
+	assert.equal(claimRes.verdict, "unverifiable");
+	assert.match(claimRes.reasoning ?? "", /Gemini API key is required/);
+});

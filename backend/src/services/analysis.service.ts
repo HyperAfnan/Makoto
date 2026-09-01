@@ -39,6 +39,15 @@ export function validate(body: unknown): ValidationResult {
 	if (input.platform !== "x") return { error: "platform must be x" };
 	if (String(input.selection).length > 2000) return { error: "selection must be 2000 characters or fewer" };
 	if (input.action !== "context" && input.action !== "claim") return { error: "action must be context or claim" };
+	if (input.images !== undefined) {
+		if (!Array.isArray(input.images)) return { error: "images must be an array of strings" };
+		if (input.images.length > 4) return { error: "images must contain 4 or fewer items" };
+		for (const img of input.images) {
+			if (typeof img !== "string" || img.length > 50000) {
+				return { error: "each image must be a valid string under 50000 characters" };
+			}
+		}
+	}
 	if (input.settings !== undefined) {
 		if (!input.settings || typeof input.settings !== "object") return { error: "settings must be an object" };
 		const settings = input.settings as Record<string, unknown>;
@@ -71,7 +80,7 @@ export async function runAnalysis(
 ) {
 	const started = Date.now();
 	const credentials = requestEnv(input.settings);
-	const key = cacheKey(input.platform, input.url, input.selection, action, input.settings);
+	const key = cacheKey(input.platform, input.url, input.selection, action, input.settings, input.images);
 	const cached = await getCached<AnalysisResponse>(key);
 	if (cached) {
 		onStatus("Cache hit");
@@ -106,8 +115,8 @@ export async function runAnalysis(
 	onStatus("Analyzing...");
 	const analysis =
 		action === "claim"
-			? await analyzeClaim(input.selection, search.results, credentials)
-			: await analyzeContext(input.selection, search.results, credentials);
+			? await analyzeClaim(input.selection, search.results, credentials, input.images)
+			: await analyzeContext(input.selection, search.results, credentials, input.images);
 	logger.info("analysis completed", {
 		requestId,
 		action,

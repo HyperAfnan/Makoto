@@ -18,6 +18,9 @@ function Evidence({ response }: { response: AnalysisResponse }) {
 			<span>{evidence.officialSources} official sources</span>
 			<span>{Math.round(evidence.agreementRatio * 100)}% agreement</span>
 			{evidence.conflicts > 0 && <span>{evidence.conflicts} conflicting sources</span>}
+			{response.input.images && response.input.images.length > 0 && (
+				<span>📷 {response.input.images.length} image{response.input.images.length > 1 ? "s" : ""} analyzed</span>
+			)}
 		</section>
 	);
 }
@@ -152,7 +155,7 @@ export default function SidePanel() {
 				<div className="empty">
 					<div className="icon">✦</div>
 					<h2>Make a claim clear</h2>
-					<p>Select text in an X post, right-click, and choose Know Context or Analyze Claim.</p>
+					<p>Select text or right-click an image in an X post, and choose Know Context or Analyze Claim.</p>
 				</div>
 			)}
 			{!response && status !== "Idle" && status !== "Error" && (
