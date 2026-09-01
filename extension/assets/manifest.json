@@ -3,7 +3,7 @@
 	"name": "Makoto",
 	"version": "0.0.1",
 	"description": "Evidence-based analysis social media posts.",
-	"permissions": ["contextMenus", "sidePanel", "activeTab", "storage"],
+	"permissions": ["contextMenus", "sidePanel", "activeTab", "storage", "scripting"],
 	"host_permissions": ["https://x.com/*", "https://twitter.com/*", "http://localhost:8787/*"],
 	"side_panel": { "default_path": "sidepanel.html" },
 	"options_ui": { "page": "options.html", "open_in_tab": true },

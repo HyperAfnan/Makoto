@@ -18,4 +18,5 @@ export const env = {
 	GEMINI_TIMEOUT_MS: Number(process.env.GEMINI_TIMEOUT_MS ?? 15000),
 	RATE_LIMIT_MAX: Number(process.env.RATE_LIMIT_MAX ?? 30),
 	RATE_LIMIT_WINDOW_SECONDS: Number(process.env.RATE_LIMIT_WINDOW_SECONDS ?? 3600),
+	APIFY_API_TOKEN: process.env.APIFY_API_KEY,
 };

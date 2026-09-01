@@ -1,65 +1,139 @@
-import { useEffect, useState } from "react";
+import { Component, type ErrorInfo, type ReactNode, useEffect, useState } from "react";
+import { createRoot } from "react-dom/client";
 import type { Action, AnalysisResponse, ApiSettings, TweetContext } from "./shared";
 
-const API = process.env.PLASMO_PUBLIC_API_URL ?? "http://localhost:8787";
+const API = process.env.CONTEXT_API_URL ?? process.env.PLASMO_PUBLIC_API_URL ?? "http://localhost:8787";
 
 type Message = { type?: string; action?: Action; context?: TweetContext };
 
-const _actionNames: Record<Action, string> = { context: "Makoto", claim: "Claim" };
 const getSettings = (): Promise<ApiSettings | undefined> =>
 	new Promise((resolve) => chrome.storage.local.get("apiSettings", ({ apiSettings }) => resolve(apiSettings)));
 
+function safeString(value: unknown): string {
+	if (typeof value === "string") return value;
+	if (Array.isArray(value)) return value.map(safeString).join("\n");
+	if (value && typeof value === "object") {
+		const obj = value as Record<string, unknown>;
+		return String(obj.text ?? obj.claim ?? obj.summary ?? obj.content ?? JSON.stringify(value));
+	}
+	return String(value ?? "");
+}
+
+interface ErrorBoundaryProps {
+	children: ReactNode;
+}
+
+interface ErrorBoundaryState {
+	hasError: boolean;
+	error: Error | null;
+}
+
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+	constructor(props: ErrorBoundaryProps) {
+		super(props);
+		this.state = { hasError: false, error: null };
+	}
+
+	static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+		return { hasError: true, error };
+	}
+
+	componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+		console.error("[Makoto] SidePanel UI error:", error, errorInfo);
+	}
+
+	render() {
+		if (this.state.hasError) {
+			return (
+				<main className="panel">
+					<header>
+						<div>
+							<p className="eyebrow">EVIDENCE ENGINE</p>
+							<h1>Makoto</h1>
+						</div>
+						<span className="status status-error" role="status">
+							Error
+						</span>
+					</header>
+					<div className="error">
+						<strong>Rendering Error</strong>
+						<p>{this.state.error?.message ?? "An error occurred while displaying results."}</p>
+						<button onClick={() => this.setState({ hasError: false, error: null })}>Try again</button>
+					</div>
+				</main>
+			);
+		}
+		return this.props.children;
+	}
+}
+
 function Evidence({ response }: { response: AnalysisResponse }) {
-	const { evidence } = response;
+	const evidence = response.evidence ?? {
+		strength: "low" as const,
+		independentDomains: 0,
+		officialSources: 0,
+		agreementRatio: 0,
+		conflicts: 0,
+	};
+	const images = response.input?.images ?? [];
 	return (
 		<section className="evidence" aria-label="Evidence summary">
 			<div className={`strength strength-${evidence.strength}`}>{evidence.strength} evidence</div>
 			<span>{evidence.independentDomains} independent domains</span>
 			<span>{evidence.officialSources} official sources</span>
-			<span>{Math.round(evidence.agreementRatio * 100)}% agreement</span>
+			<span>{Math.round((evidence.agreementRatio || 0) * 100)}% agreement</span>
 			{evidence.conflicts > 0 && <span>{evidence.conflicts} conflicting sources</span>}
-			{response.input.images && response.input.images.length > 0 && (
-				<span>📷 {response.input.images.length} image{response.input.images.length > 1 ? "s" : ""} analyzed</span>
+			{images.length > 0 && (
+				<span>
+					📷 {images.length} image{images.length > 1 ? "s" : ""} analyzed
+				</span>
 			)}
 		</section>
 	);
 }
 
 function Result({ response }: { response: AnalysisResponse }) {
-	const { analysis, search } = response;
+	const analysis = response.analysis ?? { summary: "", background: "", related: [] };
+	const search = response.search ?? { results: [] };
+	const results = Array.isArray(search.results) ? search.results : [];
+	const rawClaims = analysis.claims;
+	const claims = Array.isArray(rawClaims) ? rawClaims : rawClaims ? [rawClaims] : [];
+
 	return (
 		<>
 			<Evidence response={response} />
-			{analysis.verdict && <div className={`verdict verdict-${analysis.verdict}`}>{analysis.verdict}</div>}
-			{analysis.claimType && <p className="muted">Claim type: {analysis.claimType}</p>}
+			{analysis.verdict && (
+				<div className={`verdict verdict-${analysis.verdict}`}>{safeString(analysis.verdict)}</div>
+			)}
+			{analysis.claimType && <p className="muted">Claim type: {safeString(analysis.claimType)}</p>}
 			<h2>{response.action === "claim" ? "Analysis" : "Summary"}</h2>
-			<p>{analysis.summary}</p>
+			<p>{safeString(analysis.summary)}</p>
 			{analysis.reasoning && (
 				<>
 					<h2>Reasoning</h2>
-					<p>{analysis.reasoning}</p>
+					<p>{safeString(analysis.reasoning)}</p>
 				</>
 			)}
 			{analysis.background && (
 				<>
 					<h2>Background</h2>
-					<p>{analysis.background}</p>
+					<p>{safeString(analysis.background)}</p>
 				</>
 			)}
-			{analysis.claims && analysis.claims.length > 0 && (
+			{claims.length > 0 && (
 				<>
 					<h2>Claims checked</h2>
 					<ul>
-						{analysis.claims.map((claim) => (
-							<li key={claim}>{claim}</li>
+						{claims.map((claim, index) => (
+							<li key={index}>{safeString(claim)}</li>
 						))}
 					</ul>
 				</>
 			)}
-			<h2>Citation ({search.results.length})</h2>
+			<h2>Citation ({results.length})</h2>
 			<div className="sources">
-				{search.results.map((source) => (
-					<a className="source" href={source.url} target="_blank" rel="noreferrer" key={source.url}>
+				{results.map((source, index) => (
+					<a className="source" href={source.url} target="_blank" rel="noreferrer" key={source.url || index}>
 						<strong>{source.title || source.domain}</strong>
 						<span>{source.domain}</span>
 						<small>{source.snippet}</small>
@@ -70,7 +144,7 @@ function Result({ response }: { response: AnalysisResponse }) {
 	);
 }
 
-export default function SidePanel() {
+function SidePanel() {
 	const [status, setStatus] = useState("Idle");
 	const [response, setResponse] = useState<AnalysisResponse | null>(null);
 	const [error, setError] = useState("");
@@ -103,16 +177,24 @@ export default function SidePanel() {
 					const events = buffer.split("\n\n");
 					buffer = events.pop() ?? "";
 					for (const event of events) {
-						const type = event.match(/^event: (.+)$/m)?.[1];
-						const data = event.match(/^data: (.+)$/m)?.[1];
+						if (!event.trim()) continue;
+						const typeMatch = event.match(/^event:\s*(.+)$/m);
+						const dataMatch = event.match(/^data:\s*([\s\S]+)$/m);
+						const type = typeMatch?.[1]?.trim();
+						const data = dataMatch?.[1]?.trim();
 						if (!data) continue;
-						const payload = JSON.parse(data) as AnalysisResponse & { message?: string };
-						if (type === "status") setStatus(payload.message ?? "Loading");
-						if (type === "completed") {
-							setStatus("Success");
-							setResponse(payload);
+						try {
+							const payload = JSON.parse(data) as AnalysisResponse & { message?: string };
+							if (type === "status") setStatus(payload.message ?? "Loading");
+							if (type === "completed") {
+								setStatus("Success");
+								setResponse(payload);
+							}
+							if (type === "error") throw new Error(payload.message ?? "Analysis failed");
+						} catch (parseErr) {
+							if (type === "error") throw parseErr;
+							console.warn("[Makoto] SSE event parse error:", parseErr, data);
 						}
-						if (type === "error") throw new Error(payload.message ?? "Analysis failed");
 					}
 					if (chunk.done) break;
 				}
@@ -140,6 +222,7 @@ export default function SidePanel() {
 				chrome.tabs.sendMessage(tab.id, { type: "analyze", action: lastMessage.action }).catch(() => undefined);
 		});
 	};
+
 	return (
 		<main className="panel">
 			<header>
@@ -174,5 +257,15 @@ export default function SidePanel() {
 			)}
 			{response && <Result response={response} />}
 		</main>
+	);
+}
+
+const container = document.getElementById("app");
+if (container) {
+	const root = createRoot(container);
+	root.render(
+		<ErrorBoundary>
+			<SidePanel />
+		</ErrorBoundary>,
 	);
 }

@@ -23,12 +23,28 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 	const action = actions[String(info.menuItemId)];
 	if (!action || !tab?.id) return;
 	pendingResult = null;
+
 	try {
 		await chrome.sidePanel.open({ tabId: tab.id });
+	} catch (e) {
+		console.error(`Unable to open side panel: ${e}`);
+	}
+
+	try {
 		await chrome.tabs.sendMessage(tab.id, { type: "analyze", action, srcUrl: info.srcUrl });
 		setTimeout(deliverPendingResult, 250);
-	} catch (e) {
-		console.error(`Unable to open side panel Error: ${e}`);
+	} catch {
+		// Content script may not be loaded if tab existed before extension install/reload
+		try {
+			await chrome.scripting.executeScript({
+				target: { tabId: tab.id },
+				files: ["contents/x.js"],
+			});
+			await chrome.tabs.sendMessage(tab.id, { type: "analyze", action, srcUrl: info.srcUrl });
+			setTimeout(deliverPendingResult, 250);
+		} catch (injectErr) {
+			console.error(`Unable to communicate with content script: ${injectErr}`);
+		}
 	}
 });
 

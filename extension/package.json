@@ -3,8 +3,8 @@
 	"version": "0.0.0",
 	"private": true,
 	"scripts": {
-		"dev": "node build.mjs",
-		"build": "node build.mjs",
+		"dev": "bun run build.ts --watch",
+		"build": "bun run build.ts",
 		"package": "bun run build && cd build/chrome-mv3-prod && zip -qr ../context-chrome.zip .",
 		"typecheck": "tsc --noEmit",
 		"lint": "eslint .",
@@ -12,7 +12,8 @@
 		"format:check": "prettier --check ."
 	},
 	"dependencies": {
-		"@google/genai": "^2.20.0"
+		"react": "^19.0.0",
+		"react-dom": "^19.0.0"
 	},
 	"devDependencies": {
 		"@eslint/js": "^9.31.0",

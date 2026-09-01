@@ -6,7 +6,15 @@ export const clean = (value: string) =>
 		.slice(0, 2000)
 		.trim();
 
-export const jsonBlock = (value: string) => JSON.parse(value.match(/```(?:json)?\s*([\s\S]*?)```/)?.[1] ?? value);
+export const jsonBlock = (value: string): unknown => {
+	try {
+		const match = value.match(/```(?:json)?\s*([\s\S]*?)```/);
+		const raw = match ? match[1].trim() : value.trim();
+		return JSON.parse(raw);
+	} catch {
+		return null;
+	}
+};
 
 export function classify(selection: string): ClaimType {
 	const text = selection.trim().toLowerCase();

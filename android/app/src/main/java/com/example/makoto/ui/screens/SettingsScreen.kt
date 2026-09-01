@@ -210,8 +210,10 @@ fun SettingsScreen(
                     expanded = expandedModel,
                     onDismissRequest = { expandedModel = false }
                 ) {
-                    DropdownMenuItem(text = { Text("gemini-2.0-flash") }, onClick = { geminiModel = "gemini-2.0-flash"; expandedModel = false })
+                    DropdownMenuItem(text = { Text("gemini-3.5-flash") }, onClick = { geminiModel = "gemini-3.5-flash"; expandedModel = false })
+                    DropdownMenuItem(text = { Text("gemini-3.1-flash-lite") }, onClick = { geminiModel = "gemini-3.1-flash-lite"; expandedModel = false })
                     DropdownMenuItem(text = { Text("gemini-2.5-flash") }, onClick = { geminiModel = "gemini-2.5-flash"; expandedModel = false })
+                    DropdownMenuItem(text = { Text("gemini-2.0-flash") }, onClick = { geminiModel = "gemini-2.0-flash"; expandedModel = false })
                 }
             }
 

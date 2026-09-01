@@ -5,17 +5,15 @@ function extract(selection: string, srcUrl?: string): TweetContext {
 	if (srcUrl) {
 		const imgEl = Array.from(document.querySelectorAll<HTMLImageElement>("img")).find(
 			(img) =>
-				img.src === srcUrl ||
-				(srcUrl.includes("pbs.twimg.com/media/") && img.src.includes(srcUrl.split("?")[0])),
+				img.src === srcUrl || (srcUrl.includes("pbs.twimg.com/media/") && img.src.includes(srcUrl.split("?")[0])),
 		);
 		article = imgEl?.closest("article") ?? null;
 	}
 	if (!article) {
 		const selected = window.getSelection()?.anchorNode;
 		article =
-			(selected instanceof Element
-				? selected.closest("article")
-				: selected?.parentElement?.closest("article")) ?? document.querySelector("article");
+			(selected instanceof Element ? selected.closest("article") : selected?.parentElement?.closest("article")) ??
+			document.querySelector("article");
 	}
 
 	const link = article?.querySelector<HTMLAnchorElement>('a[href*="/status/"]');
@@ -26,7 +24,7 @@ function extract(selection: string, srcUrl?: string): TweetContext {
 		"";
 	const tweetText =
 		article?.querySelector('[data-testid="tweetText"]')?.textContent?.trim() ??
-		article?.innerText?.trim().slice(0, 5000) ??
+		(article instanceof HTMLElement ? article.innerText.trim().slice(0, 5000) : "") ??
 		"";
 
 	const imagesSet = new Set<string>();
@@ -58,16 +56,14 @@ function extract(selection: string, srcUrl?: string): TweetContext {
 	};
 }
 
-chrome.runtime.onMessage.addListener(
-	(message: { type?: string; action?: Action; srcUrl?: string }) => {
-		if (message.type !== "analyze" || !message.action) return;
-		const selection = window.getSelection()?.toString().trim() ?? "";
-		chrome.runtime
-			.sendMessage({
-				type: "tweet-context",
-				action: message.action,
-				context: extract(selection, message.srcUrl),
-			})
-			.catch(() => undefined);
-	},
-);
+chrome.runtime.onMessage.addListener((message: { type?: string; action?: Action; srcUrl?: string }) => {
+	if (message.type !== "analyze" || !message.action) return;
+	const selection = window.getSelection()?.toString().trim() ?? "";
+	chrome.runtime
+		.sendMessage({
+			type: "tweet-context",
+			action: message.action,
+			context: extract(selection, message.srcUrl),
+		})
+		.catch(() => undefined);
+});
