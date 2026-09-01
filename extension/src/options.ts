@@ -7,7 +7,7 @@ const setStatus = (message: string) => {
 	if (status) status.textContent = message;
 };
 
-const setSearchProvider = (provider: "brave" | "tavily") => {
+const setSearchProvider = (provider?: "google" | "brave" | "tavily") => {
 	const braveCheckbox = document.querySelector<HTMLInputElement>("#useBrave");
 	const tavilyCheckbox = document.querySelector<HTMLInputElement>("#useTavily");
 	if (braveCheckbox) braveCheckbox.checked = provider === "brave";

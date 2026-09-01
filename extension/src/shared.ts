@@ -6,16 +6,17 @@ export type TweetContext = {
 	url: string;
 	author: string;
 	timestamp: string;
-	platform: "x";
+	platform: "x" | "instagram";
 	images?: string[];
 };
 
 export type ApiSettings = {
-	searchProvider: "brave" | "tavily";
+	searchProvider?: "google" | "brave" | "tavily";
 	braveApiKey?: string;
 	tavilyApiKey?: string;
 	geminiApiKey?: string;
 	geminiModel?: string;
+	apifyApiKey?: string;
 	maxSources?: number;
 };
 
@@ -43,6 +44,13 @@ export type EvidenceSummary = {
 export type ClaimType = "fact" | "opinion" | "prediction" | "question" | "mixed";
 export type Verdict = "true" | "false" | "misleading" | "unverifiable";
 
+export type VideoContext = {
+	transcript?: string;
+	visualContext?: string;
+	onScreenText?: string;
+	claims?: string[];
+};
+
 export type AnalysisResult = {
 	summary: string;
 	background: string;
@@ -51,6 +59,7 @@ export type AnalysisResult = {
 	claims?: string[];
 	verdict?: Verdict;
 	reasoning?: string;
+	videoContext?: VideoContext;
 };
 
 export type SearchResult = {

@@ -14,9 +14,11 @@ export const env = {
 	REDIS_URL: process.env.REDIS_URL,
 	CACHE_TTL_SECONDS: Number(process.env.CACHE_TTL_SECONDS ?? 21600),
 	ANALYSIS_TIMEOUT_MS: Number(process.env.ANALYSIS_TIMEOUT_MS ?? 20000),
+	REEL_ANALYSIS_TIMEOUT_MS: Number(process.env.REEL_ANALYSIS_TIMEOUT_MS ?? 120000),
 	SEARCH_TIMEOUT_MS: Number(process.env.SEARCH_TIMEOUT_MS ?? 8000),
 	GEMINI_TIMEOUT_MS: Number(process.env.GEMINI_TIMEOUT_MS ?? 15000),
 	RATE_LIMIT_MAX: Number(process.env.RATE_LIMIT_MAX ?? 30),
 	RATE_LIMIT_WINDOW_SECONDS: Number(process.env.RATE_LIMIT_WINDOW_SECONDS ?? 3600),
-	APIFY_API_TOKEN: process.env.APIFY_API_KEY,
+	APIFY_API_TOKEN: process.env.APIFY_API_KEY ?? process.env.APIFY_API_TOKEN,
+	APIFY_ACTOR_ID: process.env.APIFY_ACTOR_ID ?? "apify/instagram-scraper",
 };

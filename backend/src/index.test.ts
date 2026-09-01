@@ -24,7 +24,26 @@ test("rejects oversized selections", () => {
 });
 
 test("rejects unsupported platforms", () => {
-	assert.equal(validate({ ...valid, platform: "web" }).error, "platform must be x");
+	assert.equal(validate({ ...valid, platform: "web" }).error, "platform must be x or instagram");
+});
+
+test("accepts instagram platform", () => {
+	assert.equal(validate({ ...valid, platform: "instagram" }).error, undefined);
+});
+
+test("accepts empty author, timestamp, and missing tweet fallback", () => {
+	const res = validate({
+		action: "context",
+		selection: "Instagram Reel",
+		url: "https://www.instagram.com/reels/DcvHXZKzMNK/",
+		author: "",
+		timestamp: "",
+		platform: "instagram",
+	});
+	assert.equal(res.error, undefined);
+	assert.equal(res.value?.author, "");
+	assert.equal(res.value?.timestamp, "");
+	assert.equal(res.value?.tweet, "Instagram Reel");
 });
 
 test("accepts request-scoped API settings", () => {
@@ -36,8 +55,8 @@ test("accepts request-scoped API settings", () => {
 
 test("rejects invalid request-scoped API settings", () => {
 	assert.equal(
-		validate({ ...valid, settings: { searchProvider: "google" } }).error,
-		"settings.searchProvider must be brave or tavily",
+		validate({ ...valid, settings: { searchProvider: "bing" as unknown as "google" } }).error,
+		"settings.searchProvider must be google, brave, or tavily",
 	);
 });
 

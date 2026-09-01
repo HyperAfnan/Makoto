@@ -1,6 +1,10 @@
 import { ApifyClient } from "apify-client";
-import { env } from "./env";
+import { env } from "./env.js";
 
-export const client = new ApifyClient({
-	token: env.APIFY_API_TOKEN,
-});
+export function getApifyClient(token?: string): ApifyClient {
+	return new ApifyClient({
+		token: token || env.APIFY_API_TOKEN,
+	});
+}
+
+export const client = getApifyClient();

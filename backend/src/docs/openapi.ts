@@ -50,14 +50,14 @@ export const openapi = {
 		schemas: {
 			AnalysisRequest: {
 				type: "object",
-				required: ["selection", "tweet", "url", "author", "timestamp", "platform"],
+				required: ["selection", "url", "platform"],
 				properties: {
 					selection: { type: "string", maxLength: 2000 },
 					tweet: { type: "string" },
 					url: { type: "string", format: "uri" },
 					author: { type: "string" },
 					timestamp: { type: "string" },
-					platform: { type: "string", enum: ["x"] },
+					platform: { type: "string", enum: ["x", "instagram"] },
 					images: {
 						type: "array",
 						items: { type: "string" },

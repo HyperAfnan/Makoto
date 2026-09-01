@@ -159,7 +159,10 @@ function SidePanel() {
 			setError("");
 			setResponse(null);
 			const controller = new AbortController();
-			const timeout = setTimeout(() => controller.abort(), 30_000);
+			const timeout = setTimeout(
+				() => controller.abort(),
+				message.context.platform === "instagram" ? 120_000 : 35_000,
+			);
 			try {
 				const result = await fetch(`${API}/api/${message.action}`, {
 					method: "POST",

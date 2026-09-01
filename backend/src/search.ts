@@ -1,15 +1,46 @@
-import type { SearchResult } from "./types/shared.js";
+import type { SearchResponse, SearchResult } from "./types/shared.js";
 import { env } from "./config/env.js";
 import type { Env } from "./types/env.js";
 import type { SearchProvider } from "./types/search.js";
+import type { GroundingMetadata } from "./config/gemini.js";
 
-const domain = (url: string) => {
+export const domain = (url: string): string => {
 	try {
 		return new URL(url).hostname.replace(/^www\./, "");
 	} catch {
 		return "";
 	}
 };
+
+export function mapGroundingMetadataToSearchResponse(metadata?: GroundingMetadata, latencyMs = 0): SearchResponse {
+	const chunks = metadata?.groundingChunks ?? [];
+	const seenUrls = new Set<string>();
+	const results: SearchResult[] = [];
+
+	for (const chunk of chunks) {
+		const uri = chunk.web?.uri;
+		if (!uri || !uri.startsWith("http") || seenUrls.has(uri)) continue;
+		seenUrls.add(uri);
+
+		const dom = domain(uri);
+		const title = chunk.web?.title?.trim() || dom || "Web Source";
+		results.push({
+			title,
+			snippet: "",
+			url: uri,
+			domain: dom,
+		});
+	}
+
+	return {
+		provider: "google",
+		queries: metadata?.webSearchQueries ?? [],
+		rounds: 1,
+		results,
+		errors: [],
+		latencyMs,
+	};
+}
 
 function normalize(item: {
 	title?: unknown;

@@ -20,7 +20,9 @@ export async function analyzeContext(
 		return {
 			summary: typeof raw.summary === "string" ? raw.summary : String(raw.summary ?? ""),
 			background: typeof raw.background === "string" ? raw.background : String(raw.background ?? ""),
-			related: Array.isArray(raw.related) ? raw.related.map(String) : results.slice(0, 5).map((source) => source.url),
+			related: Array.isArray(raw.related)
+				? raw.related.map(String)
+				: results.slice(0, 5).map((source) => source.url),
 		};
 	}
 	return {
@@ -58,13 +60,19 @@ export async function analyzeClaim(
 			? raw.claims.map((c) =>
 					typeof c === "string"
 						? c
-						: String((c as Record<string, unknown>)?.claim ?? (c as Record<string, unknown>)?.text ?? JSON.stringify(c)),
+						: String(
+								(c as Record<string, unknown>)?.claim ??
+									(c as Record<string, unknown>)?.text ??
+									JSON.stringify(c),
+							),
 				)
 			: claims;
 		return {
 			summary: typeof raw.summary === "string" ? raw.summary : String(raw.summary ?? ""),
 			background: typeof raw.background === "string" ? raw.background : String(raw.background ?? ""),
-			related: Array.isArray(raw.related) ? raw.related.map(String) : results.slice(0, 5).map((source) => source.url),
+			related: Array.isArray(raw.related)
+				? raw.related.map(String)
+				: results.slice(0, 5).map((source) => source.url),
 			claimType: (raw.claimType as ClaimType) ?? claimType,
 			claims: normalizedClaims,
 			verdict: raw.verdict as Verdict | undefined,
