@@ -6,7 +6,8 @@ export type TweetContext = {
 	url: string;
 	author: string;
 	timestamp: string;
-	platform: "x" | "instagram";
+	platform: "x" | "instagram" | "reddit";
+	subreddit?: string;
 	images?: string[];
 };
 

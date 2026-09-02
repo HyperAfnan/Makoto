@@ -3,6 +3,7 @@ package com.example.makoto.data
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -24,7 +25,7 @@ sealed class SseEvent {
 object MakotoApi {
     private val client = OkHttpClient.Builder()
         .connectTimeout(30, TimeUnit.SECONDS)
-        .readTimeout(30, TimeUnit.SECONDS)
+        .readTimeout(120, TimeUnit.SECONDS)
         .writeTimeout(30, TimeUnit.SECONDS)
         .build()
 
@@ -67,9 +68,7 @@ object MakotoApi {
             .build()
 
         try {
-            val response = withContext(Dispatchers.IO) {
-                client.newCall(httpRequest).execute()
-            }
+            val response = client.newCall(httpRequest).execute()
             
             if (!response.isSuccessful) {
                 emit(SseEvent.Error("HTTP Error: ${response.code} ${response.message}"))
@@ -107,11 +106,17 @@ object MakotoApi {
                                         val analysisResponse = json.decodeFromString<AnalysisResponse>(dataString)
                                         emit(SseEvent.Completed(analysisResponse))
                                     } catch (e: Exception) {
-                                        emit(SseEvent.Error("Failed to parse completion data: ${e.message}"))
+                                        emit(SseEvent.Error("Failed to parse completion data: ${e.message ?: e.javaClass.simpleName}"))
                                     }
                                 }
                                 "error" -> {
-                                    emit(SseEvent.Error(dataString))
+                                    try {
+                                        val jsonElement = json.parseToJsonElement(dataString)
+                                        val message = jsonElement.jsonObject["message"]?.jsonPrimitive?.content ?: dataString
+                                        emit(SseEvent.Error(message))
+                                    } catch (e: Exception) {
+                                        emit(SseEvent.Error(dataString))
+                                    }
                                 }
                             }
                         }
@@ -130,9 +135,9 @@ object MakotoApi {
                 }
             }
         } catch (e: IOException) {
-            emit(SseEvent.Error("Network error: ${e.message}"))
+            emit(SseEvent.Error("Network error: ${e.message ?: e.javaClass.simpleName}"))
         } catch (e: Exception) {
-            emit(SseEvent.Error("Unknown error: ${e.message}"))
+            emit(SseEvent.Error(e.message ?: e.localizedMessage ?: "Unknown error occurred (${e.javaClass.simpleName})"))
         }
-    }
+    }.flowOn(Dispatchers.IO)
 }

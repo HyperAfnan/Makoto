@@ -14,10 +14,25 @@ function deliverPendingResult() {
 
 chrome.runtime.onInstalled.addListener(() => {
 	chrome.contextMenus.removeAll(() => {
-		chrome.contextMenus.create({ id: "context", title: "Know Context", contexts: ["selection", "image"] });
-		chrome.contextMenus.create({ id: "claim", title: "Analyze Claim", contexts: ["selection", "image"] });
+		chrome.contextMenus.create({
+			id: "context",
+			title: "Know Context",
+			contexts: ["selection", "image", "video", "link", "page"],
+		});
+		chrome.contextMenus.create({
+			id: "claim",
+			title: "Analyze Claim",
+			contexts: ["selection", "image", "video", "link", "page"],
+		});
 	});
 });
+
+function getContentScriptForUrl(url?: string): string {
+	if (!url) return "contents/x.js";
+	if (url.includes("instagram.com")) return "contents/instagram.js";
+	if (url.includes("reddit.com")) return "contents/reddit.js";
+	return "contents/x.js";
+}
 
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 	const action = actions[String(info.menuItemId)];
@@ -36,9 +51,10 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 	} catch {
 		// Content script may not be loaded if tab existed before extension install/reload
 		try {
+			const scriptFile = getContentScriptForUrl(tab.url);
 			await chrome.scripting.executeScript({
 				target: { tabId: tab.id },
-				files: ["contents/x.js"],
+				files: [scriptFile],
 			});
 			await chrome.tabs.sendMessage(tab.id, { type: "analyze", action, srcUrl: info.srcUrl });
 			setTimeout(deliverPendingResult, 250);

@@ -4,9 +4,21 @@
 	"version": "0.0.1",
 	"description": "Evidence-based analysis social media posts.",
 	"permissions": ["contextMenus", "sidePanel", "activeTab", "storage", "scripting"],
-	"host_permissions": ["https://x.com/*", "https://twitter.com/*", "http://localhost:8787/*"],
+	"host_permissions": [
+		"https://x.com/*",
+		"https://twitter.com/*",
+		"https://*.instagram.com/*",
+		"https://instagram.com/*",
+		"https://*.reddit.com/*",
+		"https://reddit.com/*",
+		"http://localhost:8787/*"
+	],
 	"side_panel": { "default_path": "sidepanel.html" },
 	"options_ui": { "page": "options.html", "open_in_tab": true },
 	"background": { "service_worker": "background.js", "type": "module" },
-	"content_scripts": [{ "matches": ["https://x.com/*", "https://twitter.com/*"], "js": ["contents/x.js"] }]
+	"content_scripts": [
+		{ "matches": ["https://x.com/*", "https://twitter.com/*"], "js": ["contents/x.js"] },
+		{ "matches": ["https://*.instagram.com/*", "https://instagram.com/*"], "js": ["contents/instagram.js"] },
+		{ "matches": ["https://*.reddit.com/*", "https://reddit.com/*"], "js": ["contents/reddit.js"] }
+	]
 }

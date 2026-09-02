@@ -8,6 +8,7 @@ import type { StatusSender, ValidationResult } from "../types/http.js";
 import { calculateEvidence } from "./evidence.service.js";
 import { cacheKey, getCached, setCached } from "./cache.service.js";
 import { analyzeInstagramReel } from "./instagram.service.js";
+import { analyzeRedditPost } from "./reddit.service.js";
 
 const inFlight = new Map<string, Promise<AnalysisResponse>>();
 
@@ -40,8 +41,8 @@ export function validate(body: unknown): ValidationResult {
 	const required = ["selection", "url", "platform"];
 	const missing = required.find((field) => typeof input[field] !== "string" || !input[field]);
 	if (missing) return { error: `${missing} is required` };
-	if (input.platform !== "x" && input.platform !== "instagram") {
-		return { error: "platform must be x or instagram" };
+	if (input.platform !== "x" && input.platform !== "instagram" && input.platform !== "reddit") {
+		return { error: "platform must be x, instagram, or reddit" };
 	}
 	if (String(input.selection).length > 2000) return { error: "selection must be 2000 characters or fewer" };
 	if (input.action !== "context" && input.action !== "claim") return { error: "action must be context or claim" };
@@ -53,6 +54,9 @@ export function validate(body: unknown): ValidationResult {
 	}
 	if (input.tweet !== undefined && typeof input.tweet !== "string") {
 		return { error: "tweet must be a string" };
+	}
+	if (input.subreddit !== undefined && typeof input.subreddit !== "string") {
+		return { error: "subreddit must be a string" };
 	}
 	input.author = typeof input.author === "string" ? input.author : "";
 	input.timestamp = typeof input.timestamp === "string" ? input.timestamp : "";
@@ -118,6 +122,15 @@ export async function runAnalysis(
 				const response = await withTimeout(
 					analyzeInstagramReel(action, input, credentials, requestId, onStatus),
 					env.REEL_ANALYSIS_TIMEOUT_MS,
+				);
+				await setCached(key, response);
+				return response;
+			}
+
+			if (input.platform === "reddit") {
+				const response = await withTimeout(
+					analyzeRedditPost(action, input, credentials, requestId, onStatus),
+					env.ANALYSIS_TIMEOUT_MS * 2,
 				);
 				await setCached(key, response);
 				return response;

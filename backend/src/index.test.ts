@@ -24,11 +24,15 @@ test("rejects oversized selections", () => {
 });
 
 test("rejects unsupported platforms", () => {
-	assert.equal(validate({ ...valid, platform: "web" }).error, "platform must be x or instagram");
+	assert.equal(validate({ ...valid, platform: "web" }).error, "platform must be x, instagram, or reddit");
 });
 
 test("accepts instagram platform", () => {
 	assert.equal(validate({ ...valid, platform: "instagram" }).error, undefined);
+});
+
+test("accepts reddit platform", () => {
+	assert.equal(validate({ ...valid, platform: "reddit" }).error, undefined);
 });
 
 test("accepts empty author, timestamp, and missing tweet fallback", () => {

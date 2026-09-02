@@ -11,6 +11,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
+import com.example.makoto.utils.UrlUtils
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
@@ -20,6 +22,7 @@ fun HomeScreen(
     modifier: Modifier = Modifier
 ) {
     var text by remember { mutableStateOf(initialText ?: "") }
+    val isInstagram = remember(text) { UrlUtils.isInstagramUrl(text) }
 
     Scaffold(
         topBar = {
@@ -63,11 +66,23 @@ fun HomeScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(150.dp),
-                placeholder = { Text("Paste text here to analyze...") },
+                placeholder = { Text("Paste tweet text or Instagram Reel link...") },
                 maxLines = 6
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            if (isInstagram) {
+                Spacer(modifier = Modifier.height(12.dp))
+                AssistChip(
+                    onClick = { },
+                    label = { Text("📸 Instagram Reel Detected") },
+                    colors = AssistChipDefaults.assistChipColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        labelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -92,7 +107,7 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(48.dp))
 
             Text(
-                text = "Select text in any app to use Makoto from the text selection menu, or share text to Makoto from the share sheet.",
+                text = "Select text in any app to use Makoto from the text selection menu, or share Instagram Reels & posts to Makoto from the share sheet.",
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurfaceVariant

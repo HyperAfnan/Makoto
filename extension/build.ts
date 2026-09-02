@@ -20,6 +20,8 @@ async function build() {
 		entrypoints: [
 			join(root, "src", "background.ts"),
 			join(root, "src", "contents", "x.ts"),
+			join(root, "src", "contents", "instagram.ts"),
+			join(root, "src", "contents", "reddit.ts"),
 			join(root, "src", "sidepanel.tsx"),
 			join(root, "src", "options.ts"),
 		],

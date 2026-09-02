@@ -72,9 +72,10 @@ class MainActivity : ComponentActivity() {
         }
 
         // Share intent (ACTION_SEND)
-        if (intent.action == Intent.ACTION_SEND && intent.type == "text/plain") {
+        if (intent.action == Intent.ACTION_SEND) {
             val sharedText = intent.getStringExtra(Intent.EXTRA_TEXT)
-            // Action will be null — the user will pick via the share action chooser in the UI
+                ?: intent.getCharSequenceExtra(Intent.EXTRA_TEXT)?.toString()
+                ?: intent.data?.toString()
             return sharedText to null
         }
 

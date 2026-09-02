@@ -65,6 +65,14 @@ data class SearchResult(
 )
 
 @Serializable
+data class VideoContext(
+    val transcript: String? = null,
+    val visualContext: String? = null,
+    val onScreenText: String? = null,
+    val claims: List<String>? = null
+)
+
+@Serializable
 data class AnalysisResult(
     val summary: String,
     val background: String,
@@ -72,7 +80,8 @@ data class AnalysisResult(
     val claimType: String? = null,
     val claims: List<String>? = null,
     val verdict: String? = null,
-    val reasoning: String? = null
+    val reasoning: String? = null,
+    val videoContext: VideoContext? = null
 )
 
 @Serializable

@@ -7,6 +7,7 @@ import com.example.makoto.data.AnalysisResponse
 import com.example.makoto.data.MakotoApi
 import com.example.makoto.data.SettingsStore
 import com.example.makoto.data.SseEvent
+import com.example.makoto.utils.UrlUtils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -53,13 +54,17 @@ class AnalysisViewModel(
 
         val baseUrl = settingsStore.backendUrl.trimEnd('/')
         val settings = settingsStore.toApiSettings()
+        val instagramUrl = UrlUtils.findInstagramUrl(text)
+        val platform = if (instagramUrl != null) "instagram" else "x"
+        val requestUrl = instagramUrl ?: (UrlUtils.extractUrl(text) ?: "https://x.com/selection")
+
         val request = AnalysisRequest(
-            selection = text.take(2000),
+            selection = (instagramUrl ?: text).take(2000),
             tweet = text.take(5000),
-            url = "",
+            url = requestUrl,
             author = "",
             timestamp = Instant.now().toString(),
-            platform = "x",
+            platform = platform,
             action = action,
             settings = settings,
         )

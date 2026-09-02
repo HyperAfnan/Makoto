@@ -57,7 +57,8 @@ export const openapi = {
 					url: { type: "string", format: "uri" },
 					author: { type: "string" },
 					timestamp: { type: "string" },
-					platform: { type: "string", enum: ["x", "instagram"] },
+					platform: { type: "string", enum: ["x", "instagram", "reddit"] },
+					subreddit: { type: "string" },
 					images: {
 						type: "array",
 						items: { type: "string" },

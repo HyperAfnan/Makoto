@@ -113,6 +113,66 @@ fun AnalysisScreen(
                             SectionHeader("Background")
                             Text(analysis.background)
                         }
+                        val videoContext = analysis.videoContext
+                        if (videoContext != null && (
+                            !videoContext.transcript.isNullOrBlank() ||
+                            !videoContext.visualContext.isNullOrBlank() ||
+                            !videoContext.onScreenText.isNullOrBlank()
+                        )) {
+                            item {
+                                Card(
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                                    ),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Column(modifier = Modifier.padding(16.dp)) {
+                                        Text(
+                                            text = "🎥 Reel Video Intelligence",
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                        if (!videoContext.transcript.isNullOrBlank()) {
+                                            Spacer(modifier = Modifier.height(8.dp))
+                                            Text(
+                                                text = "Audio Transcript",
+                                                style = MaterialTheme.typography.labelLarge,
+                                                fontWeight = FontWeight.SemiBold
+                                            )
+                                            Text(
+                                                text = videoContext.transcript,
+                                                style = MaterialTheme.typography.bodyMedium
+                                            )
+                                        }
+                                        if (!videoContext.visualContext.isNullOrBlank()) {
+                                            Spacer(modifier = Modifier.height(8.dp))
+                                            Text(
+                                                text = "Visual Context",
+                                                style = MaterialTheme.typography.labelLarge,
+                                                fontWeight = FontWeight.SemiBold
+                                            )
+                                            Text(
+                                                text = videoContext.visualContext,
+                                                style = MaterialTheme.typography.bodyMedium
+                                            )
+                                        }
+                                        if (!videoContext.onScreenText.isNullOrBlank()) {
+                                            Spacer(modifier = Modifier.height(8.dp))
+                                            Text(
+                                                text = "On-Screen Text",
+                                                style = MaterialTheme.typography.labelLarge,
+                                                fontWeight = FontWeight.SemiBold
+                                            )
+                                            Text(
+                                                text = videoContext.onScreenText,
+                                                style = MaterialTheme.typography.bodyMedium
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
                         if (!analysis.claims.isNullOrEmpty()) {
                             item {
                                 SectionHeader("Claims")
